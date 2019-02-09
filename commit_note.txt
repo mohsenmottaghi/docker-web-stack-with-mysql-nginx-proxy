@@ -1,0 +1,3 @@
+I add new Branch with name 'latest_branch' then I remove master barnch and rename latest_branch to master branch for removeing all commits history 
+
+last master code - c942929
