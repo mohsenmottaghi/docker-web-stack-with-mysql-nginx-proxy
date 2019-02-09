@@ -1,0 +1,98 @@
+# ----------------------------------------------------------- #
+#  MOHSEN MOTTAGHI | stack sql & apache & proxy |  Feb  2019  #
+# ----------------------------------------------------------- #
+version: '3.3'
+
+services:
+  webserver:
+    depends_on:
+      - database
+    image: wordpress:latest
+    volumes:
+      - webserver_files:/var/www/html
+    restart: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        # reservations:
+        #   cpus: '0.25'
+        #   memory: 20M
+    secrets:
+      - database_user_pass
+    environment:
+      WORDPRESS_DB_HOST: database:3306
+      WORDPRESS_DB_USER: username
+      # WORDPRESS_DB_PASSWORD: userpassword
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/database_user_pass
+    networks:
+      - backend
+
+  database:
+    image: mariadb:latest
+    volumes:
+      - database_files:/var/lib/mysql
+    restart: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        # reservations:
+        #   cpus: '0.25'
+        #   memory: 20M
+    secrets:
+      - database_root_pass
+      - database_user_pass
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/database_root_pass
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: username
+      # MYSQL_PASSWORD: userpassword
+      MYSQL_PASSWORD_FILE: /run/secrets/database_user_pass
+    networks:
+      - backend
+
+  reverse_proxy:
+    depends_on:
+      - webserver
+    image: mohsenmottaghi/nginx-pagespeed:latest  
+    restart: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        # reservations:
+        #   cpus: '0.25'
+        #   memory: 20M
+    volumes: 
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    networks:
+      - frontend
+      - backend
+    ports:
+     - "80:80"
+     - "443:443"
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
+
+volumes:
+    webserver_files:
+    
+    database_files:
+
+secrets:
+  database_root_pass:
+    file: ./secrets/database_root_pass
+  database_user_pass:
+    file: ./secrets/database_user_pass
+  
