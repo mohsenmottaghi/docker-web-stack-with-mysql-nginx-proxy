@@ -14,7 +14,7 @@ For use from this Repo you should have one of these:
 
 or
 
-- Docker-Compose
+- Docker-Compose (Should remove Swarm tools from `Yml` file)
 
 ## Set up your swarm
 
